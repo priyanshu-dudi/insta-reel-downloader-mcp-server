@@ -6,11 +6,26 @@ import instagramGetUrl from "instagram-url-direct";
 import * as cheerio from "cheerio";
 import axios from "axios";
 import { handleSse, handleMessages } from "./src/mcp";
+import { openApiSpec } from "./src/openapi";
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+// --- OpenAPI Route ---
+app.get("/openapi.json", (req, res) => {
+  const host = req.get("host");
+  // Default to https on Vercel/Production
+  const protocol = host?.includes("localhost") ? "http" : "https";
+  const url = `${protocol}://${host}`;
+  
+  const spec = { 
+    ...openApiSpec, 
+    servers: [{ url }] 
+  };
+  res.json(spec);
+});
 
 // --- Helper Functions (Keep for API endpoint) ---
 // ... (Keep existing helpers if needed for the REST API, or import from mcp.ts if refactored)

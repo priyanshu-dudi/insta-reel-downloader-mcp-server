@@ -13,7 +13,9 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [configFormat, setConfigFormat] = useState<'json' | 'yaml'>('json');
+  const [showMcpModal, setShowMcpModal] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [configFormat, setConfigFormat] = useState<'json' | 'yaml' | 'openapi' | 'curl'>('json');
 
   const copyConfig = () => {
     const origin = window.location.origin;
@@ -36,7 +38,7 @@ export default function App() {
     }
   }
 }`;
-    } else {
+    } else if (configFormat === 'yaml') {
       config = `name: Instagram Downloader
 version: 0.0.1
 mcpServers:
@@ -50,11 +52,35 @@ mcpServers:
     description: Download Instagram Reels
     timeout: 300
     alwaysAllow: []`;
+    } else if (configFormat === 'openapi') {
+      config = `${origin}/openapi.json`;
+    } else {
+      config = `curl -X POST ${origin}/api/download \\
+  -H "Content-Type: application/json" \\
+  -d '{"url": "${url || 'https://www.instagram.com/reel/...'}"}'`;
     }
 
     navigator.clipboard.writeText(config);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!url) return;
+
+    setLoading(true);
+    setError(null);
+    setVideoUrl(null);
+
+    try {
+      const result = await downloadReel(url);
+      setVideoUrl(result.videoUrl);
+    } catch (err: any) {
+      setError(err.message || 'Failed to download reel');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -208,25 +234,41 @@ mcpServers:
                 </button>
               </div>
               
-              <div className="flex space-x-4 mb-4 border-b border-white/10">
+              <div className="flex space-x-4 mb-4 border-b border-white/10 overflow-x-auto">
                 <button
                   onClick={() => setConfigFormat('json')}
-                  className={`pb-2 text-sm font-medium transition-colors ${configFormat === 'json' ? 'text-pink-400 border-b-2 border-pink-400' : 'text-slate-400 hover:text-slate-200'}`}
+                  className={`pb-2 text-sm font-medium transition-colors whitespace-nowrap ${configFormat === 'json' ? 'text-pink-400 border-b-2 border-pink-400' : 'text-slate-400 hover:text-slate-200'}`}
                 >
-                  Claude Desktop (JSON)
+                  Claude (JSON)
                 </button>
                 <button
                   onClick={() => setConfigFormat('yaml')}
-                  className={`pb-2 text-sm font-medium transition-colors ${configFormat === 'yaml' ? 'text-pink-400 border-b-2 border-pink-400' : 'text-slate-400 hover:text-slate-200'}`}
+                  className={`pb-2 text-sm font-medium transition-colors whitespace-nowrap ${configFormat === 'yaml' ? 'text-pink-400 border-b-2 border-pink-400' : 'text-slate-400 hover:text-slate-200'}`}
                 >
-                  Codex / YAML
+                  YAML
+                </button>
+                <button
+                  onClick={() => setConfigFormat('openapi')}
+                  className={`pb-2 text-sm font-medium transition-colors whitespace-nowrap ${configFormat === 'openapi' ? 'text-pink-400 border-b-2 border-pink-400' : 'text-slate-400 hover:text-slate-200'}`}
+                >
+                  OpenAI Action
+                </button>
+                <button
+                  onClick={() => setConfigFormat('curl')}
+                  className={`pb-2 text-sm font-medium transition-colors whitespace-nowrap ${configFormat === 'curl' ? 'text-pink-400 border-b-2 border-pink-400' : 'text-slate-400 hover:text-slate-200'}`}
+                >
+                  cURL
                 </button>
               </div>
               
               <p className="text-slate-300 text-sm mb-4">
                 {configFormat === 'json' 
                   ? 'Add this to your claude_desktop_config.json:' 
-                  : 'Use this configuration for Codex or other YAML-based MCP clients:'}
+                  : configFormat === 'yaml' 
+                    ? 'Use this configuration for YAML-based MCP clients:'
+                    : configFormat === 'openapi'
+                      ? 'Import this URL into your Custom GPT Action:'
+                      : 'Run this command in your terminal:'}
               </p>
 
               <div className="relative bg-slate-950 rounded-lg p-4 border border-slate-800 mb-4 font-mono text-xs text-slate-300 overflow-x-auto">
@@ -245,10 +287,13 @@ mcpServers:
         "@modelcontextprotocol/server-sse",
         "--url",
         "${typeof window !== 'undefined' ? window.location.origin : 'YOUR_APP_URL'}/sse"
-      ]
+      ],
+      "description": "Download Instagram Reels",
+      "timeout": 300,
+      "alwaysAllow": []
     }
   }
-}` : `name: Instagram Downloader
+}` : configFormat === 'yaml' ? `name: Instagram Downloader
 version: 0.0.1
 mcpServers:
   - name: instagram-downloader
@@ -257,14 +302,29 @@ mcpServers:
       - -y
       - @modelcontextprotocol/server-sse
       - --url
-      - ${typeof window !== 'undefined' ? window.location.origin : 'YOUR_APP_URL'}/sse`}</pre>
+      - ${typeof window !== 'undefined' ? window.location.origin : 'YOUR_APP_URL'}/sse
+    description: Download Instagram Reels
+    timeout: 300
+    alwaysAllow: []` : configFormat === 'openapi' ? `${typeof window !== 'undefined' ? window.location.origin : 'YOUR_APP_URL'}/openapi.json` : `curl -X POST ${typeof window !== 'undefined' ? window.location.origin : 'YOUR_APP_URL'}/api/download \\
+  -H "Content-Type: application/json" \\
+  -d '{"url": "${url || 'https://www.instagram.com/reel/...'}"}'`}</pre>
               </div>
 
               <div className="text-xs text-slate-500 space-y-2">
-                <p>
-                  <strong>Note:</strong> This configuration uses the <code className="text-slate-400">@modelcontextprotocol/server-sse</code> adapter 
-                  to connect to this server's SSE endpoint.
-                </p>
+                {configFormat === 'json' || configFormat === 'yaml' ? (
+                  <p>
+                    <strong>Note:</strong> This configuration uses the <code className="text-slate-400">@modelcontextprotocol/server-sse</code> adapter 
+                    to connect to this server's SSE endpoint.
+                  </p>
+                ) : configFormat === 'openapi' ? (
+                  <p>
+                    <strong>Note:</strong> Use this URL to import the API definition when creating a Custom GPT in OpenAI.
+                  </p>
+                ) : (
+                  <p>
+                    <strong>Note:</strong> Replace the URL in the JSON body with the actual Instagram Reel URL you want to download.
+                  </p>
+                )}
               </div>
             </motion.div>
           </motion.div>

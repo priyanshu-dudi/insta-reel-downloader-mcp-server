@@ -43,6 +43,18 @@ This project is configured for easy deployment on Vercel.
 
 See [DEPLOYMENT.md](./DEPLOYMENT.md) for instructions on how to push updates to Vercel.
 
+## API Usage
+
+See [API_USAGE.md](./API_USAGE.md) for documentation on how to use the REST API to download reels programmatically.
+
+### Quick cURL Example
+
+```bash
+curl -X POST https://your-app-name.vercel.app/api/download \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://www.instagram.com/reel/..."}'
+```
+
 ## MCP Server Usage
 
 Once deployed, you can use the MCP server with any MCP client (like Claude Desktop or other AI agents).
