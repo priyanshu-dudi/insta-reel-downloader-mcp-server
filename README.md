@@ -1,11 +1,66 @@
-<div align="center">
+# InstaReel Downloader & MCP Server
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+A full-stack application that serves as both a user-friendly web interface and an MCP (Model Context Protocol) server for downloading Instagram Reels.
 
-  <h1>Built with AI Studio</h2>
+## Features
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+- **Web Interface**: Paste an Instagram Reel URL to download the video.
+- **MCP Server**: Exposes a `download_reel` tool via SSE and JSON-RPC.
+- **Robust Scraping**: Uses multiple fallback methods (API, Cheerio, Regex) to ensure high success rates.
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## Deployment on Vercel
 
-</div>
+This project is configured for easy deployment on Vercel.
+
+### Prerequisites
+
+- A GitHub account
+- A Vercel account
+
+### Steps
+
+1.  **Push to GitHub**:
+    - Create a new repository on GitHub.
+    - Push this code to the repository.
+
+2.  **Deploy to Vercel**:
+    - Go to [Vercel Dashboard](https://vercel.com/dashboard).
+    - Click **"Add New..."** -> **"Project"**.
+    - Import your GitHub repository.
+    - **Framework Preset**: Vercel should automatically detect "Vite". If not, select "Vite".
+    - **Root Directory**: `./` (default).
+    - **Build Command**: `npm run build` (default).
+    - **Output Directory**: `dist` (default).
+    - Click **"Deploy"**.
+
+### Vercel Configuration Details
+
+- The `api/index.ts` file serves as the entry point for Vercel Serverless Functions.
+- The `vercel.json` file routes API requests (`/api/*`, `/sse`, `/mcp/*`) to this function.
+- The frontend is built as a static site and served by Vercel's CDN.
+
+## MCP Server Usage
+
+Once deployed, you can use the MCP server with any MCP client (like Claude Desktop or other AI agents).
+
+- **SSE Endpoint**: `https://your-app-name.vercel.app/sse`
+- **Messages Endpoint**: `https://your-app-name.vercel.app/mcp/messages`
+
+### Tool Definition
+
+```json
+{
+  "name": "download_reel",
+  "description": "Download an Instagram Reel from a URL",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "url": {
+        "type": "string",
+        "description": "The URL of the Instagram Reel"
+      }
+    },
+    "required": ["url"]
+  }
+}
+```

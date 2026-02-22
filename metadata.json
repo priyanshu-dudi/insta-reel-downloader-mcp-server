@@ -1,0 +1,5 @@
+{
+  "name": "InstaReel Downloader",
+  "description": "Download Instagram Reels easily via a simple interface or MCP server endpoint.",
+  "requestFramePermissions": []
+}
