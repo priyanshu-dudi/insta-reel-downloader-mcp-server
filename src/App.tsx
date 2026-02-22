@@ -152,10 +152,13 @@ mcpServers:
                 <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
                 <p className="text-sm text-red-200">{error}</p>
               </div>
-              <div className="pl-8 text-xs text-red-300/70 list-disc">
-                <p>Troubleshooting tips:</p>
-                <ul className="list-disc pl-4 mt-1 space-y-1">
-                  <li>Ensure the account is <strong>public</strong>. Private reels cannot be downloaded.</li>
+              <div className="pl-8 text-xs text-red-300/70">
+                <p className="font-semibold mb-1">Troubleshooting tips:</p>
+                <ul className="list-disc pl-4 space-y-1">
+                  <li>
+                    <strong>Private Accounts:</strong> This tool only works with public reels. 
+                    Downloading from private accounts requires authentication, which is not supported for privacy reasons.
+                  </li>
                   <li>Check if the link is valid and opens in a browser.</li>
                   <li>Instagram might be temporarily blocking requests. Try again in a few minutes.</li>
                 </ul>
