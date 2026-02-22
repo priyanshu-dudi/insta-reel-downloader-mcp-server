@@ -13,36 +13,45 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  const [showMcpModal, setShowMcpModal] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!url) return;
-
-    setLoading(true);
-    setError(null);
-    setVideoUrl(null);
-
-    try {
-      const result = await downloadReel(url);
-      setVideoUrl(result.videoUrl);
-    } catch (err: any) {
-      setError(err.message || 'Failed to download reel');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [configFormat, setConfigFormat] = useState<'json' | 'yaml'>('json');
 
   const copyConfig = () => {
-    const config = `{
+    const origin = window.location.origin;
+    let config = '';
+
+    if (configFormat === 'json') {
+      config = `{
   "mcpServers": {
     "instagram-downloader": {
       "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-sse", "--url", "${window.location.origin}/sse"]
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sse",
+        "--url",
+        "${origin}/sse"
+      ],
+      "description": "Download Instagram Reels",
+      "timeout": 300,
+      "alwaysAllow": []
     }
   }
 }`;
+    } else {
+      config = `name: Instagram Downloader
+version: 0.0.1
+mcpServers:
+  - name: instagram-downloader
+    command: npx
+    args:
+      - -y
+      - @modelcontextprotocol/server-sse
+      - --url
+      - ${origin}/sse
+    description: Download Instagram Reels
+    timeout: 300
+    alwaysAllow: []`;
+    }
+
     navigator.clipboard.writeText(config);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -189,7 +198,7 @@ export default function App() {
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-xl font-bold text-white flex items-center">
                   <Terminal className="w-5 h-5 mr-2 text-pink-500" />
-                  Add to Claude / Cursor
+                  Add to AI Agent
                 </h3>
                 <button 
                   onClick={() => setShowMcpModal(false)}
@@ -199,9 +208,25 @@ export default function App() {
                 </button>
               </div>
               
+              <div className="flex space-x-4 mb-4 border-b border-white/10">
+                <button
+                  onClick={() => setConfigFormat('json')}
+                  className={`pb-2 text-sm font-medium transition-colors ${configFormat === 'json' ? 'text-pink-400 border-b-2 border-pink-400' : 'text-slate-400 hover:text-slate-200'}`}
+                >
+                  Claude Desktop (JSON)
+                </button>
+                <button
+                  onClick={() => setConfigFormat('yaml')}
+                  className={`pb-2 text-sm font-medium transition-colors ${configFormat === 'yaml' ? 'text-pink-400 border-b-2 border-pink-400' : 'text-slate-400 hover:text-slate-200'}`}
+                >
+                  Codex / YAML
+                </button>
+              </div>
+              
               <p className="text-slate-300 text-sm mb-4">
-                To use this tool with Claude Desktop or other MCP clients, add this configuration to your 
-                <code className="bg-slate-800 px-1.5 py-0.5 rounded text-pink-400 mx-1">claude_desktop_config.json</code>:
+                {configFormat === 'json' 
+                  ? 'Add this to your claude_desktop_config.json:' 
+                  : 'Use this configuration for Codex or other YAML-based MCP clients:'}
               </p>
 
               <div className="relative bg-slate-950 rounded-lg p-4 border border-slate-800 mb-4 font-mono text-xs text-slate-300 overflow-x-auto">
@@ -211,7 +236,7 @@ export default function App() {
                 >
                   {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-slate-400" />}
                 </button>
-                <pre>{`{
+                <pre>{configFormat === 'json' ? `{
   "mcpServers": {
     "instagram-downloader": {
       "command": "npx",
@@ -223,16 +248,22 @@ export default function App() {
       ]
     }
   }
-}`}</pre>
+}` : `name: Instagram Downloader
+version: 0.0.1
+mcpServers:
+  - name: instagram-downloader
+    command: npx
+    args:
+      - -y
+      - @modelcontextprotocol/server-sse
+      - --url
+      - ${typeof window !== 'undefined' ? window.location.origin : 'YOUR_APP_URL'}/sse`}</pre>
               </div>
 
               <div className="text-xs text-slate-500 space-y-2">
                 <p>
                   <strong>Note:</strong> This configuration uses the <code className="text-slate-400">@modelcontextprotocol/server-sse</code> adapter 
                   to connect to this server's SSE endpoint.
-                </p>
-                <p>
-                  If you are using <strong>Cursor</strong>, you may need to wait for full remote MCP support or use a local proxy.
                 </p>
               </div>
             </motion.div>

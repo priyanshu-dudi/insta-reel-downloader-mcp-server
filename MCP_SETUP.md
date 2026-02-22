@@ -1,6 +1,8 @@
-# Setting up InstaReel Downloader as an MCP Server
+# InstaReel Downloader & MCP Server
 
 This application exposes a Model Context Protocol (MCP) server that allows AI agents (like Claude Desktop) to download Instagram Reels.
+
+**New:** This server implements the **MCP Apps** specification. When used in compatible clients (like ChatGPT with MCP support), it can render an interactive UI widget directly in the chat!
 
 ## Prerequisites
 
@@ -26,7 +28,10 @@ This application exposes a Model Context Protocol (MCP) server that allows AI ag
             "@modelcontextprotocol/server-sse",
             "--url",
             "https://your-app.vercel.app/sse"
-          ]
+          ],
+          "description": "Download Instagram Reels",
+          "timeout": 300,
+          "alwaysAllow": []
         }
       }
     }
@@ -36,7 +41,35 @@ This application exposes a Model Context Protocol (MCP) server that allows AI ag
 
 3.  Restart Claude Desktop.
 
-## Using with Cursor (Advanced)
+## Configuration for Codex / Other YAML Clients
+
+If your MCP client uses YAML configuration (like the example you provided), use this format:
+
+```yaml
+name: Instagram Downloader
+version: 0.0.1
+mcpServers:
+  - name: instagram-downloader
+    command: npx
+    args:
+      - -y
+      - @modelcontextprotocol/server-sse
+      - --url
+      - https://your-app.vercel.app/sse
+    description: Download Instagram Reels
+    timeout: 300
+    alwaysAllow: []
+```
+
+## UI Widget (ChatGPT Apps)
+
+This server registers a UI resource (`ui://widget/reel.html`) and links it to the `download_reel` tool.
+When the AI calls the tool, it can render the widget to show the video player directly in the conversation history.
+
+To see the widget in action:
+1. Ensure you have built the frontend (`npm run build`).
+2. The server serves the built `dist/index.html` as the widget template.
+
 
 As of early 2024, Cursor's MCP support is evolving. You typically need to run a local proxy that connects to the remote SSE endpoint if Cursor only supports local stdio servers.
 

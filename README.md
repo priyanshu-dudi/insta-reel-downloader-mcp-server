@@ -39,6 +39,10 @@ This project is configured for easy deployment on Vercel.
 - The `vercel.json` file routes API requests (`/api/*`, `/sse`, `/mcp/*`) to this function.
 - The frontend is built as a static site and served by Vercel's CDN.
 
+## Updating Your Deployment
+
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for instructions on how to push updates to Vercel.
+
 ## MCP Server Usage
 
 Once deployed, you can use the MCP server with any MCP client (like Claude Desktop or other AI agents).
